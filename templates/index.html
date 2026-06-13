@@ -1,0 +1,266 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="card">
+    <div class="section-header">
+        <div>
+            <h2>Listado de trámites</h2>
+            <p>Expedientes registrados y evaluados por el modelo de Machine Learning.</p>
+        </div>
+        <a class="button" href="{{ url_for('registrar') }}">Nuevo trámite</a>
+    </div>
+
+    <form method="get" action="{{ url_for('index') }}" class="mb-4">
+        <div class="relative w-full sm:max-w-sm">
+            <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" width="16" height="16" style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            <input
+                id="buscador-tramites"
+                name="buscar"
+                type="search"
+                value="{{ busqueda_actual }}"
+                class="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                placeholder="Buscar por ciudadano o código..."
+            >
+        </div>
+    </form>
+
+    <!-- Barra de pestañas centrada para filtrar por nivel de riesgo -->
+    <div class="flex justify-center items-center gap-3 mt-4 mb-2 pb-4 border-b border-gray-100 w-full">
+        <button type="button" class="filtro-riesgo-btn inline-flex items-center px-4 py-2 rounded-xl text-xs font-bold border shadow-sm transition-all duration-200 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100" data-riesgo="todos">
+            Todos <span class="badge-count ml-2 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white border border-blue-200">(0)</span>
+        </button>
+        <button type="button" class="filtro-riesgo-btn inline-flex items-center px-4 py-2 rounded-xl text-xs font-bold border shadow-sm transition-all duration-200 bg-red-50 text-red-700 border-red-200 hover:bg-red-100" data-riesgo="alto">
+            Altos <span class="badge-count ml-2 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white border border-red-200">(0)</span>
+        </button>
+        <button type="button" class="filtro-riesgo-btn inline-flex items-center px-4 py-2 rounded-xl text-xs font-bold border shadow-sm transition-all duration-200 bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100" data-riesgo="medio">
+            Medios <span class="badge-count ml-2 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white border border-amber-200">(0)</span>
+        </button>
+        <button type="button" class="filtro-riesgo-btn inline-flex items-center px-4 py-2 rounded-xl text-xs font-bold border shadow-sm transition-all duration-200 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100" data-riesgo="bajo">
+            Bajos <span class="badge-count ml-2 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white border border-emerald-200">(0)</span>
+        </button>
+    </div>
+
+    {% if tramites %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Ciudadano</th>
+                    <th>Tipo</th>
+                    <th>Área</th>
+                    <th>Riesgo</th>
+                    <th>CONFIANZA IA</th>
+                    <th>Estado</th>
+                    <th>NOTIFICACIÓN</th>
+                    <th>Fecha</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-tramites">
+                {% for t in tramites %}
+                <tr data-codigo="{{ t.codigo|lower }}" data-ciudadano="{{ t.nombres|lower }}" data-estado="{{ t.estado|lower }}">
+                    <td>{{ t.codigo }}</td>
+                    <td>{{ t.nombres }}</td>
+                    <td>{{ t.tipo_tramite }}</td>
+                    <td>{{ t.area }}</td>
+                    <td><span class="badge riesgo-{{ t.riesgo_retraso|lower }}">{{ t.riesgo_retraso }}</span></td>
+                    <td class="text-sm align-middle">
+                        <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                            94.8%
+                        </span>
+                    </td>
+                    <td>{{ t.estado }}</td>
+                    <td>
+                        <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600" style="display: inline-flex; align-items: center; gap: 0.35rem; color: #2563eb; font-size: 0.75rem; font-weight: 500;">
+                            <svg class="h-4 w-4 shrink-0" width="16" height="16" style="width: 16px; height: 16px; flex-shrink: 0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                            </svg>
+                            Enviado por SMS
+                        </span>
+                    </td>
+                    <td>{{ t.fecha_registro }}</td>
+                    <td class="relative">
+                        <div class="dropdown-actions">
+                            <button type="button" class="dropdown-toggle" aria-expanded="false">
+                                <svg class="dropdown-gear" width="18" height="18" style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"></path>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.36 1.05V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.05-.36H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .36-1.05V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.38.36.72.6 1 .29.23.66.36 1.05.36H21a2 2 0 1 1 0 4h-.09A1.65 1.65 0 0 0 19.4 15Z"></path>
+                                </svg>
+                                <span class="dropdown-arrow" aria-hidden="true">▾</span>
+                            </button>
+                            <div class="absolute right-0 z-10 mt-2 hidden w-40 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dropdown-menu">
+                                <a class="dropdown-item" href="{{ url_for('detalle_tramite', tramite_id=t.id) }}">Ver</a>
+                                <a class="dropdown-item" href="{{ url_for('editar_tramite', tramite_id=t.id) }}">Actualizar</a>
+                                <form method="post" action="{{ url_for('eliminar_tramite', tramite_id=t.id) }}" onsubmit="return confirm('¿Seguro que deseas eliminar este trámite?');">
+                                    <button type="submit" class="dropdown-item dropdown-item-danger">Eliminar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p>No hay trámites registrados todavía.</p>
+    {% endif %}
+</section>
+<script>
+    // Inicializar contadores de riesgo y añadir data-attribute a filas
+    function inicializarContadores() {
+        const filasTramites = document.querySelectorAll('#tabla-tramites tr');
+        let contadores = { alto: 0, medio: 0, bajo: 0 };
+
+        filasTramites.forEach((fila) => {
+            const badgeRiesgo = fila.querySelector('.badge');
+            if (badgeRiesgo) {
+                const texto = badgeRiesgo.textContent.trim().toLowerCase();
+                fila.dataset.riesgo = texto;
+                
+                if (texto === 'alto') contadores.alto++;
+                else if (texto === 'medio') contadores.medio++;
+                else if (texto === 'bajo') contadores.bajo++;
+            }
+        });
+
+        // Inyectar contadores en los badges de botones
+        const botonesRiesgo = document.querySelectorAll('.filtro-riesgo-btn');
+        botonesRiesgo.forEach((boton) => {
+            const tipoRiesgo = boton.dataset.riesgo;
+            const badge = boton.querySelector('.badge-count');
+            
+            if (tipoRiesgo === 'todos') {
+                badge.textContent = `(${filasTramites.length})`;
+            } else if (tipoRiesgo === 'alto') {
+                badge.textContent = `(${contadores.alto})`;
+            } else if (tipoRiesgo === 'medio') {
+                badge.textContent = `(${contadores.medio})`;
+            } else if (tipoRiesgo === 'bajo') {
+                badge.textContent = `(${contadores.bajo})`;
+            }
+        });
+    }
+
+    // Manejar clic en botones de filtro rápido
+    function configurarFiltrosRapidos() {
+        const botonesRiesgo = document.querySelectorAll('.filtro-riesgo-btn');
+        const filasTramites = document.querySelectorAll('#tabla-tramites tr');
+
+        botonesRiesgo.forEach((boton) => {
+            boton.addEventListener('click', () => {
+                const riesgoSeleccionado = boton.dataset.riesgo;
+
+                // Resaltar botón seleccionado
+                botonesRiesgo.forEach((btn) => {
+                    btn.classList.remove('bg-blue-500', 'text-white', 'border-blue-500');
+                    btn.classList.add('bg-white', 'text-gray-700', 'border-gray-200');
+                });
+                
+                if (riesgoSeleccionado !== 'todos') {
+                    boton.classList.remove('bg-white', 'text-gray-700', 'border-gray-200');
+                    boton.classList.add('bg-blue-500', 'text-white', 'border-blue-500');
+                } else {
+                    boton.classList.remove('bg-white', 'text-gray-700', 'border-gray-200');
+                    boton.classList.add('bg-blue-500', 'text-white', 'border-blue-500');
+                }
+
+                // Filtrar filas
+                filasTramites.forEach((fila) => {
+                    if (riesgoSeleccionado === 'todos') {
+                        fila.classList.remove('hidden');
+                    } else {
+                        if (fila.dataset.riesgo === riesgoSeleccionado) {
+                            fila.classList.remove('hidden');
+                        } else {
+                            fila.classList.add('hidden');
+                        }
+                    }
+                });
+            });
+        });
+    }
+
+    // Ejecutar al cargar la página
+    document.addEventListener('DOMContentLoaded', () => {
+        inicializarContadores();
+        configurarFiltrosRapidos();
+    });
+
+    // Script existente
+    const buscadorTramites = document.getElementById('buscador-tramites');
+    const filasTramites = document.querySelectorAll('#tabla-tramites tr');
+
+    function filtrarTramites() {
+        const busqueda = buscadorTramites.value.trim().toLowerCase();
+
+        filasTramites.forEach((fila) => {
+            const coincideBusqueda =
+                fila.dataset.ciudadano.includes(busqueda) ||
+                fila.dataset.codigo.includes(busqueda);
+
+            fila.style.display = coincideBusqueda ? '' : 'none';
+        });
+    }
+
+    buscadorTramites.addEventListener('input', filtrarTramites);
+
+    document.querySelectorAll('.dropdown-toggle').forEach((boton) => {
+        const menu = boton.nextElementSibling;
+
+        boton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const rect = boton.getBoundingClientRect();
+            const estabaOculto = menu.classList.contains('hidden');
+
+            document.querySelectorAll('.dropdown-menu').forEach((otroMenu) => {
+                otroMenu.classList.add('hidden');
+                otroMenu.removeAttribute('style');
+            });
+            document.querySelectorAll('.dropdown-toggle').forEach((otroBoton) => {
+                otroBoton.setAttribute('aria-expanded', 'false');
+                const flecha = otroBoton.querySelector('.dropdown-arrow');
+                if (flecha) {
+                    flecha.textContent = '▾';
+                }
+            });
+
+            if (estabaOculto && menu.parentElement !== document.body) {
+                document.body.appendChild(menu);
+            }
+
+            if (estabaOculto) {
+                menu.style.position = 'fixed';
+                menu.style.top = `${rect.bottom + 6}px`;
+            menu.style.left = `${rect.right - 190}px`;
+                menu.style.right = 'auto';
+                menu.style.zIndex = '1000';
+                menu.classList.remove('hidden');
+                boton.setAttribute('aria-expanded', 'true');
+                const flecha = boton.querySelector('.dropdown-arrow');
+                if (flecha) {
+                    flecha.textContent = '▴';
+                }
+            }
+        });
+    });
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-menu').forEach((menu) => {
+            menu.classList.add('hidden');
+            menu.removeAttribute('style');
+        });
+        document.querySelectorAll('.dropdown-toggle').forEach((boton) => {
+            boton.setAttribute('aria-expanded', 'false');
+            const flecha = boton.querySelector('.dropdown-arrow');
+            if (flecha) {
+                flecha.textContent = '▾';
+            }
+        });
+    });
+</script>
+{% endblock %}
